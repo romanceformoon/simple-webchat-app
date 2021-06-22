@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+
+        var ws = null;
+        function connect(){
+            var wsUri = (window.location.protocol == 'https:' ? 'wss://' : 'ws://') + window.location.host;
+            console.log(wsUri);
+            ws = new WebSocket(wsUri);
+
+            ws.onopen = function(e) {
+                $('#output').append( "<p>Connected</br></p>" );
+            }
+            ws.onclose = function(e) {
+                $('#output').append( "<p>Disconnected</br></p>" );
+            }
+            ws.onmessage = function(e) {
+                var msg = JSON.parse(e.data);
+                if(msg.type == "user"){
+                    var tmp = "";
+                    for(const x in msg.name_list){
+                        tmp += msg.name_list[x] + " ";
+                    }
+                    $('#namelist').html("Online Users: " + tmp)
+                    $('#output').append( "<p>" + msg.nickname + " Connected</br></p>" );
+                }
+                else if(msg.type == "disconnect"){
+                    var tmp = "";
+                    for(const x in msg.name_list){
+                        tmp += msg.name_list[x] + " ";
+                    }
+                    $('#namelist').html("Online Users: " + tmp)
+                    $('#output').append( "<p>[" + now.toLocaleString() + "] " + msg.nickname + ": " + msg.message + "</br></p>" );
+                }
+                else if(msg.type == "received"){
+                    var now = new Date();
+                    $('#output').append( "<p>[" + now.toLocaleString() + "] " + msg.nickname + ": " + msg.message + "</br></p>" );
+                }
+            }
+        }
+        connect();
+    </script>
+</head>
+<body>
+    <div id="namelist">
+    </div>
+    <div id="output">
+    </div>
+    <input id="text" type="text" />
+    <button id="send">SEND</button>
+</body>
+
+<script type="text/javascript">
+
+        $('#send').click(function (){
+            ws.send($('#text').val());
+            $('#text').val('');
+        });
+
+        $("#text").keydown(function (key){
+            if(key.keyCode == 13) {
+                ws.send($('#text').val());
+                $('#text').val('');
+            }
+        });
+
+</script>
+
+</html>
