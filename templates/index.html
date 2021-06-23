@@ -15,32 +15,35 @@
             ws = new WebSocket(wsUri);
 
             ws.onopen = function(e) {
-                $('#output').append( "<p>Connected</br></p>" );
+                $('#status').html("Connected</br>");
             }
             ws.onclose = function(e) {
-                $('#output').append( "<p>Disconnected</br></p>" );
+                $('#status').html("Disconnected</br>");
             }
             ws.onmessage = function(e) {
                 var msg = JSON.parse(e.data);
+                var now = new Date();
                 if(msg.type == "user"){
                     var tmp = "";
                     for(const x in msg.name_list){
                         tmp += msg.name_list[x] + " ";
                     }
-                    $('#namelist').html("Online Users: " + tmp)
-                    $('#output').append( "<p>" + msg.nickname + " Connected</br></p>" );
+                    $('#namelist').html("Online Users (" + msg.name_list.length + "): " + tmp)
+                    $('#chat').append( "[" + now.toLocaleString() + "] " + msg.nickname + " Connected</br>" );
+                    $('#chat').scrollTop($('#chat').prop('scrollHeight') + 1000);
                 }
                 else if(msg.type == "disconnect"){
                     var tmp = "";
                     for(const x in msg.name_list){
                         tmp += msg.name_list[x] + " ";
                     }
-                    $('#namelist').html("Online Users: " + tmp)
-                    $('#output').append( "<p>[" + now.toLocaleString() + "] " + msg.nickname + ": " + msg.message + "</br></p>" );
+                    $('#namelist').html("Online Users (" + msg.name_list.length + "): " + tmp)
+                    $('#chat').append("[" + now.toLocaleString() + "] " + msg.nickname + " Disconnected</br>");
+                    $('#chat').scrollTop($('#chat').prop('scrollHeight') + 1000);
                 }
                 else if(msg.type == "received"){
-                    var now = new Date();
-                    $('#output').append( "<p>[" + now.toLocaleString() + "] " + msg.nickname + ": " + msg.message + "</br></p>" );
+                    $('#chat').append("[" + now.toLocaleString() + "] " + msg.nickname + ": " + msg.message + "</br>");
+                    $('#chat').scrollTop($('#chat').prop('scrollHeight') + 1000);
                 }
             }
         }
@@ -48,25 +51,28 @@
     </script>
 </head>
 <body>
-    <div id="namelist">
-    </div>
-    <div id="output">
+    <div id="status"></div>
+    <div id="namelist"></div>
+    <div id="chat" style="overflow:scroll; width:600px; height:450px">
     </div>
     <input id="text" type="text" />
     <button id="send">SEND</button>
 </body>
 
 <script type="text/javascript">
-
-        $('#send').click(function (){
+        function send(){
             ws.send($('#text').val());
             $('#text').val('');
+            $('#chat').scrollTop($('#chat').prop('scrollHeight') + 1000);
+        }
+
+        $('#send').click(function (){
+            send();
         });
 
         $("#text").keydown(function (key){
             if(key.keyCode == 13) {
-                ws.send($('#text').val());
-                $('#text').val('');
+                send();
             }
         });
 
